@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>홈트 모음</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0a0b0d">
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#0a0b0d;
+    --surface:#16181c;
+    --surface-2:#1e2125;
+    --line:#2b2e33;
+    --text:#f4f5f6;
+    --text-dim:#9aa0a8;
+    --text-faint:#7d848c;
+    --accent:#fc4c02;
+    --accent-2:#ff7038;
+    --success:#22c55e;
+    --radius:16px;
+    --radius-sm:12px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Malgun Gothic',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding-bottom:60px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button, input, select{font-family:inherit;}
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none!important;animation:none!important;}
+  }
+
+  header{
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+    padding:20px 16px;
+  }
+  .header-row{
+    max-width:720px;
+    margin:0 auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+  }
+  header h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em;}
+  .header-sub{margin:2px 0 0;font-size:12.5px;color:var(--text-dim);}
+  .streak-pill{
+    flex-shrink:0;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-size:13px;
+    font-weight:700;
+    padding:7px 13px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+
+  main{max-width:720px;margin:0 auto;padding:16px;}
+
+  /* 공통 박스 */
+  .form-box, .filter-box, .stats-box{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:16px;
+  }
+
+  /* 입력 요소 공통 */
+  input[type=url], input[type=text], select{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:var(--radius-sm);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input::placeholder{color:var(--text-faint);}
+  input[type=url]:focus, input[type=text]:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(252,76,2,.18);
+  }
+
+  .form-box input[type=url]{
+    width:100%;
+    padding:14px;
+    font-size:16px;
+    margin-bottom:10px;
+  }
+  .tag-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+  .tag-row select{
+    flex:1;
+    min-width:90px;
+    padding:10px 6px;
+    font-size:14.5px;
+  }
+
+  .btn-primary{
+    width:100%;
+    padding:15px;
+    font-size:16.5px;
+    font-weight:800;
+    color:#fff;
+    background:var(--accent);
+    border:none;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    box-shadow:0 8px 20px rgba(252,76,2,.28);
+    transition:transform .12s ease, background-color .15s ease;
+  }
+  .btn-primary:active{transform:scale(.97);background:var(--accent-2);}
+  .status-msg{font-size:13px;color:var(--text-dim);margin-top:8px;min-height:16px;}
+
+  /* 상단 도구줄 */
+  .toolbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;}
+  .toolbar button{
+    padding:9px 14px;
+    font-size:13px;
+    font-weight:600;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--text-dim);
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    transition:transform .12s ease, border-color .15s ease;
+  }
+  .toolbar button:active{transform:scale(.96);}
+
+  /* 필터 & 검색 */
+  #search-input{width:100%;padding:11px;font-size:14.5px;margin-bottom:10px;}
+  .filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+  .filter-row select{flex:1;min-width:80px;padding:9px 4px;font-size:13px;}
+  .btn-recommend{
+    width:100%;
+    padding:13px;
+    font-size:15px;
+    font-weight:800;
+    color:var(--accent-2);
+    background:rgba(252,76,2,.12);
+    border:1.5px solid var(--accent);
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    transition:transform .12s ease;
+  }
+  .btn-recommend:active{transform:scale(.97);}
+
+  /* 재생 영역 */
+  #player-area{margin-bottom:16px;}
+  #player-area.hidden{display:none;}
+  .player-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:#000;
+    border:1px solid var(--line);
+  }
+  .player-wrap iframe{width:100%;height:100%;border:0;}
+  .ig-msg{
+    padding:16px;
+    text-align:center;
+    background:rgba(252,76,2,.12);
+    border:1px solid rgba(252,76,2,.35);
+    border-radius:var(--radius-sm);
+    font-size:14px;
+    color:var(--text);
+    word-break:keep-all;
+  }
+  .complete-btn{
+    width:100%;
+    padding:14px;
+    font-size:16px;
+    font-weight:800;
+    border-radius:var(--radius-sm);
+    border:none;
+    margin-top:8px;
+    cursor:pointer;
+    background:var(--accent);
+    color:#fff;
+    transition:transform .12s ease, background-color .15s ease;
+  }
+  .complete-btn:active{transform:scale(.97);}
+  .complete-btn.done{background:var(--success);}
+  .player-close{
+    width:100%;
+    padding:11px;
+    margin-top:8px;
+    font-size:14.5px;
+    font-weight:600;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--text-dim);
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+  }
+
+  /* 목록 */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    cursor:pointer;
+    position:relative;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .card:active{transform:scale(.97);}
+  @media (hover:hover){
+    .card:hover{transform:translateY(-2px);border-color:#3a3e44;}
+  }
+  .thumb{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    background:var(--surface-2) center/cover no-repeat;
+  }
+  .thumb.no-image{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,var(--surface-2),var(--surface));
+  }
+  .thumb.no-image .placeholder-label{color:var(--text-dim);font-size:13px;font-weight:600;}
+  .card-overlay{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    padding:24px 10px 8px;
+    background:linear-gradient(to top, rgba(0,0,0,.88), rgba(0,0,0,0) 80%);
+  }
+  .card-title{
+    color:#fff;
+    font-size:13.5px;
+    font-weight:700;
+    line-height:1.3;
+    margin-bottom:6px;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .badges{display:flex;flex-wrap:wrap;gap:4px;}
+  .badge{
+    font-size:10.5px;
+    font-weight:700;
+    background:rgba(255,255,255,.14);
+    color:#fff;
+    padding:3px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);
+  }
+  .badge.accent{background:var(--accent);border-color:var(--accent);}
+  .del-btn{
+    position:absolute;
+    top:8px;
+    right:8px;
+    z-index:2;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:none;
+    background:rgba(0,0,0,.55);
+    color:#fff;
+    font-size:15px;
+    line-height:26px;
+    text-align:center;
+    cursor:pointer;
+  }
+  .empty{
+    text-align:center;
+    color:var(--text-dim);
+    padding:40px 0;
+    font-size:14px;
+  }
+
+  /* 운동 기록 */
+  .stats-box h3{margin:0 0 12px;font-size:15px;font-weight:800;}
+  .streak-num{font-size:34px;font-weight:800;color:var(--accent);}
+  .streak-label{font-size:13px;color:var(--text-dim);margin-left:4px;}
+  .days-row{display:flex;gap:6px;margin:16px 0;}
+  .day-dot{flex:1;text-align:center;font-size:11px;color:var(--text-dim);}
+  .day-dot .circle{
+    width:100%;
+    aspect-ratio:1;
+    border-radius:50%;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    margin-bottom:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+    color:var(--text-faint);
+  }
+  .day-dot .circle.on{background:var(--success);border-color:var(--success);color:#fff;}
+  .top-list{list-style:none;padding:0;margin:0;font-size:13.5px;}
+  .top-list li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);}
+  .top-list li:last-child{border-bottom:none;}
+  .top-list li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+  .top-count{
+    flex-shrink:0;
+    background:var(--surface-2);
+    color:var(--accent-2);
+    font-weight:700;
+    font-size:12px;
+    padding:3px 9px;
+    border-radius:999px;
+  }
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-faint);
+    padding:24px 16px 0;
+    line-height:1.6;
+    word-break:keep-all;
+    border-top:1px solid var(--line);
+    margin-top:24px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1>홈트</h1>
+      <p class="header-sub">내 운동 영상 모음</p>
+    </div>
+    <div class="streak-pill" id="header-streak">🔥 0일</div>
+  </div>
+</header>
+
+<main>
+  <!-- 도구줄 -->
+  <div class="toolbar">
+    <button id="export-btn">내보내기</button>
+    <button id="import-btn">가져오기</button>
+    <input type="file" id="import-file" accept="application/json" style="display:none;">
+  </div>
+
+  <!-- 영상 등록 -->
+  <div class="form-box">
+    <input id="url-input" type="url" placeholder="유튜브 또는 인스타그램 영상 링크 붙여넣기">
+    <div class="tag-row">
+      <select id="tag-part">
+        <option value="전신">전신</option>
+        <option value="상체">상체</option>
+        <option value="하체">하체</option>
+        <option value="복근">복근</option>
+        <option value="스트레칭">스트레칭</option>
+      </select>
+      <select id="tag-time">
+        <option value="5분">5분</option>
+        <option value="10분">10분</option>
+        <option value="20분 이상">20분 이상</option>
+      </select>
+      <select id="tag-level">
+        <option value="쉬움">쉬움</option>
+        <option value="보통">보통</option>
+        <option value="힘듦">힘듦</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="add-btn">영상 등록</button>
+    <div class="status-msg" id="status-msg"></div>
+  </div>
+
+  <!-- 필터 & 검색 -->
+  <div class="filter-box">
+    <input id="search-input" type="text" placeholder="제목으로 검색">
+    <div class="filter-row">
+      <select id="filter-part">
+        <option value="">부위 전체</option>
+        <option value="전신">전신</option>
+        <option value="상체">상체</option>
+        <option value="하체">하체</option>
+        <option value="복근">복근</option>
+        <option value="스트레칭">스트레칭</option>
+      </select>
+      <select id="filter-time">
+        <option value="">시간 전체</option>
+        <option value="5분">5분</option>
+        <option value="10분">10분</option>
+        <option value="20분 이상">20분 이상</option>
+      </select>
+      <select id="filter-level">
+        <option value="">난이도 전체</option>
+        <option value="쉬움">쉬움</option>
+        <option value="보통">보통</option>
+        <option value="힘듦">힘듦</option>
+      </select>
+    </div>
+    <button class="btn-recommend" id="recommend-btn">오늘의 추천</button>
+  </div>
+
+  <!-- 재생 영역 -->
+  <div id="player-area" class="hidden">
+    <div class="player-wrap" id="player-wrap"><iframe id="player-frame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
+    <div class="ig-msg" id="ig-msg" style="display:none;">인스타그램은 새 탭에서 열었어요. 다 보셨으면 아래에서 완료 체크해주세요.</div>
+    <button class="complete-btn" id="complete-btn" style="display:none;">오늘 완료</button>
+    <button class="player-close" id="player-close">닫기</button>
+  </div>
+
+  <!-- 목록 -->
+  <div class="grid" id="video-grid"></div>
+  <div class="empty" id="empty-msg" style="display:none;"></div>
+
+  <!-- 운동 기록 -->
+  <div class="stats-box">
+    <h3>운동 기록</h3>
+    <div><span class="streak-num" id="streak-num">0</span><span class="streak-label">일 연속</span></div>
+    <div class="days-row" id="days-row"></div>
+    <div id="top-videos"></div>
+  </div>
+</main>
+
+<footer>
+  홈트 영상 모음 © 2026 KIMYERANG. (v0.6)<br>
+  자유롭게 사용 가능하나, 허락 없는 복제·배포·수정은 금지합니다.
+</footer>
+
+<script>
+// 데이터는 localStorage에만 저장 (개인용, 서버 없음)
+const STORAGE_KEY = 'hometrainer_videos';
+const LOGS_KEY = 'hometrainer_logs'; // [{date:'YYYY-MM-DD', videoId}]
+let currentPlayingId = null;
+
+function loadVideos(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveVideos(list){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+function loadLogs(){
+  try{ return JSON.parse(localStorage.getItem(LOGS_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveLogs(list){
+  localStorage.setItem(LOGS_KEY, JSON.stringify(list));
+}
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// 유튜브 링크에서 영상 ID 추출 (watch, youtu.be, shorts 모두 대응)
+function parseYoutubeId(url){
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+function isInstagramUrl(url){
+  return /instagram\.com\/(reel|p)\//.test(url);
+}
+
+async function fetchYoutubeMeta(youtubeUrl){
+  // oEmbed로 제목·썸네일 시도, 실패하면 썸네일만 기본 URL로 대체
+  try{
+    const res = await fetch('https://www.youtube.com/oembed?url=' + encodeURIComponent(youtubeUrl) + '&format=json');
+    if(!res.ok) throw new Error('oembed fail');
+    const data = await res.json();
+    return { title: data.title, thumbnail: data.thumbnail_url };
+  }catch(e){
+    return null;
+  }
+}
+
+async function handleAdd(){
+  const input = document.getElementById('url-input');
+  const url = input.value.trim();
+  const statusEl = document.getElementById('status-msg');
+  if(!url){ statusEl.textContent = '링크를 입력해주세요.'; return; }
+
+  const part = document.getElementById('tag-part').value;
+  const time = document.getElementById('tag-time').value;
+  const level = document.getElementById('tag-level').value;
+  const list = loadVideos();
+
+  const youtubeId = parseYoutubeId(url);
+
+  if(youtubeId){
+    statusEl.textContent = '정보를 가져오는 중...';
+    const meta = await fetchYoutubeMeta(url);
+    const video = {
+      id: Date.now().toString(),
+      type: 'youtube',
+      youtubeId,
+      url,
+      title: meta ? meta.title : ('유튜브 영상 (' + youtubeId + ')'),
+      thumbnail: meta ? meta.thumbnail : ('https://img.youtube.com/vi/' + youtubeId + '/hqdefault.jpg'),
+      part, time, level,
+      createdAt: Date.now()
+    };
+    list.unshift(video);
+    saveVideos(list);
+    renderList();
+    input.value = '';
+    statusEl.textContent = '등록됐어요.';
+  }else if(isInstagramUrl(url)){
+    // 인스타그램은 공개 oEmbed가 막혀 있어 링크만 저장, 클릭 시 새 탭으로 연다
+    const video = {
+      id: Date.now().toString(),
+      type: 'instagram',
+      url,
+      title: '인스타그램 영상',
+      thumbnail: null,
+      part, time, level,
+      createdAt: Date.now()
+    };
+    list.unshift(video);
+    saveVideos(list);
+    renderList();
+    input.value = '';
+    statusEl.textContent = '등록됐어요. (인스타그램은 새 탭으로 재생돼요)';
+  }else{
+    statusEl.textContent = '유튜브 또는 인스타그램 링크만 등록할 수 있어요.';
+  }
+}
+
+function playVideo(video){
+  currentPlayingId = video.id;
+  const area = document.getElementById('player-area');
+  const wrap = document.getElementById('player-wrap');
+  const igMsg = document.getElementById('ig-msg');
+
+  if(video.type === 'youtube'){
+    document.getElementById('player-frame').src = 'https://www.youtube.com/embed/' + video.youtubeId + '?autoplay=1';
+    wrap.style.display = '';
+    igMsg.style.display = 'none';
+  }else{
+    window.open(video.url, '_blank');
+    wrap.style.display = 'none';
+    igMsg.style.display = 'block';
+  }
+
+  area.classList.remove('hidden');
+  area.scrollIntoView({behavior:'smooth'});
+  updateCompleteBtn();
+}
+
+function closePlayer(){
+  document.getElementById('player-frame').src = '';
+  document.getElementById('player-area').classList.add('hidden');
+  currentPlayingId = null;
+}
+
+function updateCompleteBtn(){
+  const btn = document.getElementById('complete-btn');
+  if(!currentPlayingId){ btn.style.display = 'none'; return; }
+  btn.style.display = 'block';
+  const done = loadLogs().some(l => l.date === todayStr() && l.videoId === currentPlayingId);
+  btn.textContent = done ? '완료했어요 ✓' : '오늘 완료';
+  btn.classList.toggle('done', done);
+  btn.disabled = done;
+}
+
+function completeToday(){
+  if(!currentPlayingId) return;
+  const logs = loadLogs();
+  logs.push({ date: todayStr(), videoId: currentPlayingId });
+  saveLogs(logs);
+  updateCompleteBtn();
+  renderStats();
+}
+
+function recommendVideo(){
+  const list = loadVideos();
+  if(list.length === 0){ alert('등록된 영상이 없어요.'); return; }
+  const pick = list[Math.floor(Math.random() * list.length)];
+  playVideo(pick);
+}
+
+function deleteVideo(id){
+  const list = loadVideos().filter(v => v.id !== id);
+  saveVideos(list);
+  renderList();
+}
+
+function getFilteredVideos(){
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const part = document.getElementById('filter-part').value;
+  const time = document.getElementById('filter-time').value;
+  const level = document.getElementById('filter-level').value;
+  return loadVideos().filter(v => {
+    if(part && v.part !== part) return false;
+    if(time && v.time !== time) return false;
+    if(level && v.level !== level) return false;
+    if(q && !v.title.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderList(){
+  const all = loadVideos();
+  const list = getFilteredVideos();
+  const grid = document.getElementById('video-grid');
+  const emptyMsg = document.getElementById('empty-msg');
+  grid.innerHTML = '';
+
+  if(all.length === 0){
+    emptyMsg.textContent = '등록된 영상이 없어요. 위에서 링크를 추가해보세요.';
+    emptyMsg.style.display = 'block';
+    renderStats();
+    return;
+  }
+  if(list.length === 0){
+    emptyMsg.textContent = '조건에 맞는 영상이 없어요.';
+    emptyMsg.style.display = 'block';
+    renderStats();
+    return;
+  }
+  emptyMsg.style.display = 'none';
+
+  list.forEach(video => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    if(video.thumbnail){
+      thumb.style.backgroundImage = "url('" + video.thumbnail + "')";
+    }else{
+      thumb.classList.add('no-image');
+      const label = document.createElement('span');
+      label.className = 'placeholder-label';
+      label.textContent = '인스타그램 영상';
+      thumb.appendChild(label);
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'card-overlay';
+
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    title.textContent = video.title;
+
+    const badges = document.createElement('div');
+    badges.className = 'badges';
+    [video.part, video.time, video.level].forEach((t, i) => {
+      const b = document.createElement('span');
+      b.className = 'badge' + (i === 0 ? ' accent' : '');
+      b.textContent = t;
+      badges.appendChild(b);
+    });
+
+    overlay.appendChild(title);
+    overlay.appendChild(badges);
+    thumb.appendChild(overlay);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del-btn';
+    delBtn.textContent = '×';
+    delBtn.onclick = (e) => { e.stopPropagation(); deleteVideo(video.id); };
+
+    card.appendChild(delBtn);
+    card.appendChild(thumb);
+    card.onclick = () => playVideo(video);
+
+    grid.appendChild(card);
+  });
+
+  renderStats();
+}
+
+function renderStats(){
+  const videos = loadVideos();
+  const logs = loadLogs();
+  const days = new Set(logs.map(l => l.date));
+
+  // 스트릭: 오늘부터 거꾸로 연속 기록된 날짜 수
+  let streak = 0;
+  const d = new Date();
+  while(days.has(d.toISOString().slice(0,10))){
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  document.getElementById('streak-num').textContent = streak;
+  document.getElementById('header-streak').textContent = '🔥 ' + streak + '일';
+
+  // 최근 7일 표시
+  const labels = ['일','월','화','수','목','금','토'];
+  const row = document.getElementById('days-row');
+  row.innerHTML = '';
+  for(let i = 6; i >= 0; i--){
+    const dd = new Date();
+    dd.setDate(dd.getDate() - i);
+    const ds = dd.toISOString().slice(0,10);
+    const on = days.has(ds);
+    const cell = document.createElement('div');
+    cell.className = 'day-dot';
+    cell.innerHTML = '<div class="circle' + (on ? ' on' : '') + '">' + (on ? '✓' : '') + '</div>' + labels[dd.getDay()];
+    row.appendChild(cell);
+  }
+
+  // 자주 한 영상 상위 3개
+  const counts = {};
+  logs.forEach(l => { counts[l.videoId] = (counts[l.videoId] || 0) + 1; });
+  const top = Object.entries(counts)
+    .map(([id, count]) => ({ video: videos.find(v => v.id === id), count }))
+    .filter(x => x.video)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+
+  const topEl = document.getElementById('top-videos');
+  if(top.length === 0){
+    topEl.innerHTML = '<div class="empty" style="padding:8px 0;">아직 완료 기록이 없어요.</div>';
+  }else{
+    topEl.innerHTML = '<ul class="top-list">' +
+      top.map(x => '<li><span>' + escapeHtml(x.video.title) + '</span><span class="top-count">' + x.count + '회</span></li>').join('') +
+      '</ul>';
+  }
+}
+
+function exportData(){
+  const data = { videos: loadVideos(), logs: loadLogs(), exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'hometrainer-backup-' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let data;
+    try{
+      data = JSON.parse(e.target.result);
+      if(!Array.isArray(data.videos)) throw new Error('형식 오류');
+    }catch(err){
+      alert('올바른 백업 파일이 아니에요.');
+      return;
+    }
+    if(!confirm('이 기기의 데이터를 가져온 파일 내용으로 덮어씁니다. 계속할까요?')) return;
+    saveVideos(data.videos);
+    saveLogs(Array.isArray(data.logs) ? data.logs : []);
+    renderList();
+    alert('가져오기 완료');
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('add-btn').addEventListener('click', handleAdd);
+document.getElementById('player-close').addEventListener('click', closePlayer);
+document.getElementById('complete-btn').addEventListener('click', completeToday);
+document.getElementById('recommend-btn').addEventListener('click', recommendVideo);
+document.getElementById('search-input').addEventListener('input', renderList);
+document.getElementById('filter-part').addEventListener('change', renderList);
+document.getElementById('filter-time').addEventListener('change', renderList);
+document.getElementById('filter-level').addEventListener('change', renderList);
+document.getElementById('export-btn').addEventListener('click', exportData);
+document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
+document.getElementById('import-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(file) importData(file);
+  e.target.value = '';
+});
+
+// 유튜브 앱 공유 메뉴 → 홈 화면에 설치한 이 앱으로 바로 공유(Web Share Target)돼 들어온 링크를 채워준다
+function handleSharedLink(){
+  const params = new URLSearchParams(location.search);
+  if(![...params.keys()].length) return;
+  const raw = params.get('url') || params.get('text') || params.get('title') || '';
+  const match = raw.match(/https?:\/\/\S+/);
+  const link = match ? match[0] : raw.trim();
+  if(link){
+    document.getElementById('url-input').value = link;
+    document.getElementById('status-msg').textContent = '공유된 링크를 가져왔어요. 태그를 확인하고 등록해주세요.';
+  }
+  history.replaceState(null, '', location.pathname);
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+}
+
+renderList();
+handleSharedLink();
+
+/* ponytail: 미니게임(마에스트로 스타일) 모드는 아직 미구현.
+   추가할 때는 별도 화면(#minigame-area)과 상단 탭 전환만 얹으면 되도록
+   현재 구조(등록 폼 / 재생 영역 / 목록)를 서로 독립적인 블록으로 유지해뒀다. */
+</script>
+
+</body>
+</html>
