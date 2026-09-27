@@ -1,6 +1,6 @@
-// SW v4 — 앱 셸 캐싱 + 공유 대상(share_target)이 동작하려면 PWA 설치가 필요해서 최소한으로 둔다
-const CACHE_NAME = 'hometrainer-v4';
-const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
+// SW v5 — 앱 셸 캐싱 + 공유 대상(share_target)이 동작하려면 PWA 설치가 필요해서 최소한으로 둔다
+const CACHE_NAME = 'hometrainer-v5';
+const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS)));
