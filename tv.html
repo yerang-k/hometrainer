@@ -95,12 +95,23 @@ var advanceTimer = null;
 function $(id){ return document.getElementById(id); }
 
 /* ---------- 데이터 ---------- */
-// PC에서 관리하는 videos.json 을 매번 새로 읽는다. 비어 있으면 이 기기 localStorage 로 대체
+// 영상 목록(videos.json)을 매번 새로 읽는다.
+// 1순위: GitHub 에서 바로 읽기(배포 캐시를 거치지 않아 등록 직후에도 최신)
+// 2순위: 같이 배포된 videos.json  3순위: 이 기기 localStorage
+var GH_RAW_API = 'https://api.github.com/repos/yerang-k/hometrainer/contents/videos.json?ref=main';
+
+function fetchVideoList(url, options){
+  return fetch(url, options)
+    .then(function(r){ if(!r.ok) throw new Error('fail'); return r.text(); })
+    .then(function(t){ var d = JSON.parse(t); return Array.isArray(d.videos) ? d.videos : []; })
+    .catch(function(){ return []; });
+}
 function loadVideos(){
-  return fetch('videos.json?t=' + Date.now(), { cache: 'no-store' })
-    .then(function(r){ if(!r.ok) throw new Error('no file'); return r.json(); })
-    .then(function(d){ return Array.isArray(d.videos) ? d.videos : []; })
-    .catch(function(){ return []; })
+  return fetchVideoList(GH_RAW_API + '&t=' + Date.now(), { cache: 'no-store', headers: { 'Accept': 'application/vnd.github.raw+json' } })
+    .then(function(list){
+      if(list.length) return list;
+      return fetchVideoList('videos.json?t=' + Date.now(), { cache: 'no-store' });
+    })
     .then(function(list){
       if(!list.length){
         try{ list = JSON.parse(localStorage.getItem('hometrainer_videos')) || []; }
