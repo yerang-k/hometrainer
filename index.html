@@ -7,22 +7,22 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-180.png">
-<meta name="theme-color" content="#0a0b0d">
+<meta name="theme-color" content="#f6f7f9">
 <link rel="stylesheet" as="style" crossorigin
   href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <style>
   :root{
-    color-scheme: dark;
-    --bg:#0a0b0d;
-    --surface:#16181c;
-    --surface-2:#1e2125;
-    --line:#2b2e33;
-    --text:#f4f5f6;
-    --text-dim:#9aa0a8;
-    --text-faint:#7d848c;
-    --accent:#fc4c02;
-    --accent-2:#ff7038;
-    --success:#22c55e;
+    color-scheme: light;
+    --bg:#f6f7f9;
+    --surface:#ffffff;
+    --surface-2:#eef0f3;
+    --line:#dde0e5;
+    --text:#16181c;
+    --text-dim:#565d66;
+    --text-faint:#6b727b;
+    --accent:#d63f00;
+    --accent-2:#b83600;
+    --success:#15803d;
     --radius:16px;
     --radius-sm:12px;
   }
@@ -90,7 +90,7 @@
   input[type=url]:focus, input[type=text]:focus, select:focus{
     outline:none;
     border-color:var(--accent);
-    box-shadow:0 0 0 3px rgba(252,76,2,.18);
+    box-shadow:0 0 0 3px rgba(214,63,0,.2);
   }
 
   .form-box input[type=url]{
@@ -117,7 +117,7 @@
     border:none;
     border-radius:var(--radius-sm);
     cursor:pointer;
-    box-shadow:0 8px 20px rgba(252,76,2,.28);
+    box-shadow:0 6px 16px rgba(214,63,0,.25);
     transition:transform .12s ease, background-color .15s ease;
   }
   .btn-primary:active{transform:scale(.97);background:var(--accent-2);}
@@ -148,7 +148,7 @@
     font-size:15px;
     font-weight:800;
     color:var(--accent-2);
-    background:rgba(252,76,2,.12);
+    background:rgba(214,63,0,.08);
     border:1.5px solid var(--accent);
     border-radius:var(--radius-sm);
     cursor:pointer;
@@ -172,8 +172,8 @@
   .ig-msg{
     padding:16px;
     text-align:center;
-    background:rgba(252,76,2,.12);
-    border:1px solid rgba(252,76,2,.35);
+    background:rgba(214,63,0,.08);
+    border:1px solid rgba(214,63,0,.3);
     border-radius:var(--radius-sm);
     font-size:14px;
     color:var(--text);
@@ -209,6 +209,7 @@
 
   /* 목록 */
   .grid{
+    margin-bottom:16px;
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
     gap:12px;
@@ -224,7 +225,7 @@
   }
   .card:active{transform:scale(.97);}
   @media (hover:hover){
-    .card:hover{transform:translateY(-2px);border-color:#3a3e44;}
+    .card:hover{transform:translateY(-2px);border-color:#b8bec6;}
   }
   .thumb{
     position:relative;
@@ -232,21 +233,22 @@
     aspect-ratio:16/9;
     background:var(--surface-2) center/cover no-repeat;
   }
+  /* 썸네일이 없는 카드는 흰색 제목이 잘 읽히도록 어두운 배경을 쓴다 */
   .thumb.no-image{
-    background:linear-gradient(135deg,var(--surface-2),var(--surface));
+    background:linear-gradient(135deg,#4b5563,#1f2937);
   }
   /* 제목은 아래 오버레이에 있으므로, 안내 글자는 좌상단 작은 라벨로 두어 겹치지 않게 한다 */
   .thumb.no-image .placeholder-label{
     position:absolute;
     top:10px;
     left:10px;
-    color:var(--text-dim);
+    color:rgba(255,255,255,.9);
     font-size:12px;
     font-weight:700;
     padding:3px 9px;
     border-radius:999px;
-    border:1px solid var(--line);
-    background:rgba(0,0,0,.25);
+    border:1px solid rgba(255,255,255,.25);
+    background:rgba(0,0,0,.3);
   }
   .card-overlay{
     position:absolute;
