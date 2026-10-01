@@ -1,3 +1,16 @@
 {
-  "videos": []
+  "videos": [
+    {
+      "id": "1790833026153",
+      "type": "youtube",
+      "youtubeId": "ZRrWLBFNQZI",
+      "url": "https://youtu.be/ZRrWLBFNQZI?si=nbohrRUj3eyuRWuL",
+      "title": "[KPop다이어트댄스]예나-캐치캐치로 꿀잼 운동하기 가능?? 꼭 따라해보세요",
+      "thumbnail": "https://i.ytimg.com/vi/ZRrWLBFNQZI/hqdefault.jpg",
+      "part": "전신",
+      "time": "5분",
+      "level": "쉬움",
+      "createdAt": 1790833026153
+    }
+  ]
 }
