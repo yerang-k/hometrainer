@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>홈트 TV</title>
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  /* LG webOS 구형 브라우저(크롬 53~)에서도 보이도록 aspect-ratio, flex gap, inset 은 쓰지 않는다 */
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:#0a0b0d;color:#f4f5f6;}
+  body{
+    font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,Roboto,'Malgun Gothic',sans-serif;
+    padding:40px 56px 60px;
+  }
+  [data-focus]{outline:none;cursor:pointer;}
+  [data-focus]:focus{outline:6px solid #fc4c02;outline-offset:3px;}
+
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;}
+  h1{margin:0;font-size:56px;font-weight:800;letter-spacing:-0.02em;}
+  .streak{font-size:30px;font-weight:700;background:#1e2125;border:2px solid #2b2e33;border-radius:999px;padding:10px 28px;}
+
+  .bar{margin-bottom:32px;}
+  .bar .btn{
+    display:inline-block;margin:0 14px 14px 0;
+    font-size:30px;font-weight:700;color:#f4f5f6;
+    background:#1e2125;border:2px solid #2b2e33;border-radius:16px;padding:14px 30px;
+  }
+  .bar .btn.on{background:#fc4c02;border-color:#fc4c02;}
+  .bar .btn.reco{color:#ff7038;border-color:#fc4c02;background:rgba(252,76,2,.12);}
+
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);grid-gap:28px;}
+  .card{background:#16181c;border:2px solid #2b2e33;border-radius:20px;overflow:hidden;}
+  .thumb{position:relative;width:100%;padding-top:56.25%;background:#1e2125 center/cover no-repeat;}
+  .info{padding:16px 18px 18px;}
+  .title{font-size:28px;font-weight:700;line-height:1.3;height:73px;overflow:hidden;margin-bottom:10px;}
+  .badge{display:inline-block;font-size:22px;font-weight:700;background:#2b2e33;border-radius:999px;padding:4px 16px;margin-right:8px;}
+  .badge.accent{background:#fc4c02;}
+  .empty{text-align:center;color:#9aa0a8;font-size:32px;padding:80px 0;line-height:1.6;word-break:keep-all;}
+
+  /* 전체화면 플레이어 */
+  #overlay{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:#000;z-index:10;display:none;}
+  #overlay.open{display:block;}
+  /* 리모컨 키 입력을 이 페이지가 받도록, 유튜브 iframe 은 클릭·포커스를 받지 않게 한다 */
+  #overlay iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;pointer-events:none;}
+  #hint{
+    position:absolute;left:0;right:0;bottom:0;padding:70px 56px 36px;
+    background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,0));
+    transition:opacity .3s;
+  }
+  #hint.hide{opacity:0;}
+  #hint .now{font-size:38px;font-weight:800;margin-bottom:10px;}
+  #hint .keys{font-size:26px;color:#c8ccd1;}
+  #flash{position:absolute;top:44px;right:56px;font-size:40px;font-weight:800;background:rgba(0,0,0,.6);border-radius:16px;padding:10px 28px;display:none;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>홈트 TV</h1>
+  <div class="streak" id="streak">🔥 0일 연속</div>
+</div>
+
+<div class="bar" id="bar"></div>
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" style="display:none;"></div>
+
+<div id="overlay">
+  <div id="yt"></div>
+  <div id="flash"></div>
+  <div id="hint">
+    <div class="now" id="now"></div>
+    <div class="keys">확인 ⏯ 재생/정지 &nbsp; ◀ ▶ 10초 이동 &nbsp; ▲ 다음 영상 &nbsp; ▼ 이전 영상 &nbsp; 뒤로가기 목록</div>
+  </div>
+</div>
+
+<script>
+var PARTS = ['전체', '전신', '상체', '하체', '복근', '스트레칭'];
+var LOGS_KEY = 'hometrainer_tv_logs';
+
+var allVideos = [];
+var shown = [];
+var filterPart = '';
+var playerOpen = false;
+var playingList = [];
+var playingIdx = -1;
+var player = null;
+var apiReady = false;
+var hintTimer = null;
+var flashTimer = null;
+var advanceTimer = null;
+
+function $(id){ return document.getElementById(id); }
+
+/* ---------- 데이터 ---------- */
+// PC에서 관리하는 videos.json 을 매번 새로 읽는다. 비어 있으면 이 기기 localStorage 로 대체
+function loadVideos(){
+  return fetch('videos.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function(r){ if(!r.ok) throw new Error('no file'); return r.json(); })
+    .then(function(d){ return Array.isArray(d.videos) ? d.videos : []; })
+    .catch(function(){ return []; })
+    .then(function(list){
+      if(!list.length){
+        try{ list = JSON.parse(localStorage.getItem('hometrainer_videos')) || []; }
+        catch(e){ list = []; }
+      }
+      return list.filter(function(v){ return v.type === 'youtube' && v.youtubeId; });
+    });
+}
+function loadLogs(){
+  try{ return JSON.parse(localStorage.getItem(LOGS_KEY)) || []; }catch(e){ return []; }
+}
+function dateStr(d){
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function logComplete(videoId){
+  var logs = loadLogs();
+  var today = dateStr(new Date());
+  var dup = logs.some(function(l){ return l.date === today && l.videoId === videoId; });
+  if(!dup){
+    logs.push({ date: today, videoId: videoId });
+    try{ localStorage.setItem(LOGS_KEY, JSON.stringify(logs)); }catch(e){}
+  }
+  renderStreak();
+}
+function renderStreak(){
+  var days = {};
+  loadLogs().forEach(function(l){ days[l.date] = true; });
+  var n = 0, d = new Date();
+  while(days[dateStr(d)]){ n++; d.setDate(d.getDate() - 1); }
+  $('streak').textContent = '🔥 ' + n + '일 연속';
+}
+
+/* ---------- 목록 화면 ---------- */
+function renderBar(){
+  var bar = $('bar');
+  bar.innerHTML = '';
+  PARTS.forEach(function(p){
+    var b = document.createElement('div');
+    b.className = 'btn' + ((p === '전체' ? '' : p) === filterPart ? ' on' : '');
+    b.setAttribute('data-focus', '1');
+    b.tabIndex = 0;
+    b.textContent = p;
+    b.onclick = function(){ filterPart = (p === '전체' ? '' : p); renderAll(true); };
+    bar.appendChild(b);
+  });
+  var reco = document.createElement('div');
+  reco.className = 'btn reco';
+  reco.setAttribute('data-focus', '1');
+  reco.tabIndex = 0;
+  reco.textContent = '오늘의 추천';
+  reco.onclick = recommend;
+  bar.appendChild(reco);
+
+  var reload = document.createElement('div');
+  reload.className = 'btn';
+  reload.setAttribute('data-focus', '1');
+  reload.tabIndex = 0;
+  reload.textContent = '🔄 새로고침';
+  reload.onclick = function(){ refresh(); };
+  bar.appendChild(reload);
+}
+
+function renderGrid(){
+  shown = allVideos.filter(function(v){ return !filterPart || v.part === filterPart; });
+  var grid = $('grid'), empty = $('empty');
+  grid.innerHTML = '';
+  if(!shown.length){
+    empty.style.display = 'block';
+    empty.innerHTML = allVideos.length
+      ? '조건에 맞는 영상이 없어요.'
+      : '등록된 영상이 없어요.<br>PC에서 영상을 등록하고 videos.json 을 올려주세요.';
+    return;
+  }
+  empty.style.display = 'none';
+  shown.forEach(function(v, i){
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.setAttribute('data-focus', '1');
+    card.tabIndex = 0;
+
+    var thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    thumb.style.backgroundImage = "url('https://img.youtube.com/vi/" + v.youtubeId + "/hqdefault.jpg')";
+
+    var info = document.createElement('div');
+    info.className = 'info';
+    var title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = v.title;
+    info.appendChild(title);
+    [v.part, v.time, v.level].forEach(function(t, k){
+      if(!t) return;
+      var b = document.createElement('span');
+      b.className = 'badge' + (k === 0 ? ' accent' : '');
+      b.textContent = t;
+      info.appendChild(b);
+    });
+
+    card.appendChild(thumb);
+    card.appendChild(info);
+    card.onclick = function(){ openPlayer(shown, i); };
+    grid.appendChild(card);
+  });
+}
+
+function renderAll(keepFocusOnBar){
+  renderBar();
+  renderGrid();
+  renderStreak();
+  var first = keepFocusOnBar
+    ? document.querySelector('#bar .btn.on')
+    : document.querySelector('[data-focus]');
+  if(first) first.focus();
+}
+
+function refresh(){
+  loadVideos().then(function(list){ allVideos = list; renderAll(false); });
+}
+
+function recommend(){
+  if(!shown.length) return;
+  openPlayer(shown, Math.floor(Math.random() * shown.length));
+}
+
+/* ---------- 리모컨 방향키 이동 (화면 위치 기준) ---------- */
+function move(dir){
+  var els = [].slice.call(document.querySelectorAll('[data-focus]'));
+  var cur = document.activeElement;
+  if(els.indexOf(cur) < 0){ if(els[0]) els[0].focus(); return; }
+  var r = cur.getBoundingClientRect();
+  var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  var best = null, bestScore = 1e9;
+  els.forEach(function(el){
+    if(el === cur) return;
+    var b = el.getBoundingClientRect();
+    var dx = b.left + b.width / 2 - cx, dy = b.top + b.height / 2 - cy;
+    var main, cross;
+    if(dir === 'left'){ if(dx > -5) return; main = -dx; cross = Math.abs(dy); }
+    else if(dir === 'right'){ if(dx < 5) return; main = dx; cross = Math.abs(dy); }
+    else if(dir === 'up'){ if(dy > -5) return; main = -dy; cross = Math.abs(dx); }
+    else { if(dy < 5) return; main = dy; cross = Math.abs(dx); }
+    var score = main + cross * 2;
+    if(score < bestScore){ bestScore = score; best = el; }
+  });
+  if(best) best.focus();
+}
+
+/* ---------- 플레이어 ---------- */
+window.onYouTubeIframeAPIReady = function(){
+  apiReady = true;
+  if(playerOpen) startVideo();
+};
+
+function openPlayer(list, idx){
+  playingList = list;
+  playingIdx = idx;
+  playerOpen = true;
+  $('overlay').className = 'open';
+  showHint();
+  if(apiReady){ startVideo(); return; }
+  if(window.YT && YT.Player){ apiReady = true; startVideo(); return; }
+  if(!document.getElementById('yt-api')){
+    var s = document.createElement('script');
+    s.id = 'yt-api';
+    s.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(s);
+  }
+}
+
+function startVideo(){
+  var v = playingList[playingIdx];
+  if(!v) return;
+  $('now').textContent = v.title + '  (' + (playingIdx + 1) + '/' + playingList.length + ')';
+  if(player){ player.loadVideoById(v.youtubeId); return; }
+  player = new YT.Player('yt', {
+    width: '100%', height: '100%', videoId: v.youtubeId,
+    playerVars: { autoplay: 1, controls: 0, disablekb: 1, rel: 0, playsinline: 1, fs: 0, modestbranding: 1 },
+    events: {
+      onReady: function(e){ e.target.playVideo(); window.focus(); },
+      onStateChange: onPlayerState,
+      onError: onPlayerError
+    }
+  });
+}
+
+function onPlayerState(e){
+  if(e.data === YT.PlayerState.ENDED){
+    logComplete(playingList[playingIdx].id);
+    flash('✓ 오늘 완료');
+    clearTimeout(advanceTimer);
+    advanceTimer = setTimeout(function(){ step(1, true); }, 1500);
+  }
+}
+function onPlayerError(){
+  flash('재생할 수 없는 영상이에요');
+  clearTimeout(advanceTimer);
+  advanceTimer = setTimeout(function(){ step(1, true); }, 2000);
+}
+
+function step(delta, closeAtEnd){
+  var n = playingIdx + delta;
+  if(n < 0 || n >= playingList.length){
+    if(closeAtEnd) closePlayer();
+    else flash(delta > 0 ? '마지막 영상이에요' : '첫 영상이에요');
+    return;
+  }
+  playingIdx = n;
+  startVideo();
+  showHint();
+}
+
+function closePlayer(){
+  clearTimeout(advanceTimer);
+  playerOpen = false;
+  if(player && player.stopVideo) player.stopVideo();
+  $('overlay').className = '';
+  var first = document.querySelector('[data-focus]');
+  if(first) first.focus();
+}
+
+function togglePlay(){
+  if(!player || !player.getPlayerState) return;
+  if(player.getPlayerState() === 1){ player.pauseVideo(); flash('⏸ 일시정지'); }
+  else{ player.playVideo(); flash('▶ 재생'); }
+}
+function seek(sec){
+  if(!player || !player.getCurrentTime) return;
+  player.seekTo(Math.max(0, player.getCurrentTime() + sec), true);
+  flash(sec > 0 ? '▶▶ +10초' : '◀◀ -10초');
+}
+
+function flash(text){
+  var f = $('flash');
+  f.textContent = text;
+  f.style.display = 'block';
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(function(){ f.style.display = 'none'; }, 1200);
+}
+function showHint(){
+  var h = $('hint');
+  h.className = '';
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(function(){ h.className = 'hide'; }, 4000);
+}
+
+/* ---------- 키 입력 (LG 매직리모컨 키코드 포함) ---------- */
+document.addEventListener('keydown', function(e){
+  var k = e.keyCode;
+  var isBack = (k === 461 || k === 27 || k === 8 || k === 10009);
+
+  if(playerOpen){
+    e.preventDefault();
+    showHint();
+    if(isBack || k === 413) closePlayer();
+    else if(k === 13 || k === 415 || k === 19 || k === 10252) togglePlay();
+    else if(k === 37 || k === 412) seek(-10);
+    else if(k === 39 || k === 417) seek(10);
+    else if(k === 38) step(1, false);
+    else if(k === 40) step(-1, false);
+    return;
+  }
+
+  if(k === 37){ e.preventDefault(); move('left'); }
+  else if(k === 38){ e.preventDefault(); move('up'); }
+  else if(k === 39){ e.preventDefault(); move('right'); }
+  else if(k === 40){ e.preventDefault(); move('down'); }
+  else if(k === 13){
+    var el = document.activeElement;
+    if(el && el.getAttribute && el.getAttribute('data-focus')){ e.preventDefault(); el.click(); }
+  }
+});
+
+/* ---------- 시작 ---------- */
+refresh();
+</script>
+</body>
+</html>

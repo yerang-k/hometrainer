@@ -233,12 +233,21 @@
     background:var(--surface-2) center/cover no-repeat;
   }
   .thumb.no-image{
-    display:flex;
-    align-items:center;
-    justify-content:center;
     background:linear-gradient(135deg,var(--surface-2),var(--surface));
   }
-  .thumb.no-image .placeholder-label{color:var(--text-dim);font-size:13px;font-weight:600;}
+  /* 제목은 아래 오버레이에 있으므로, 안내 글자는 좌상단 작은 라벨로 두어 겹치지 않게 한다 */
+  .thumb.no-image .placeholder-label{
+    position:absolute;
+    top:10px;
+    left:10px;
+    color:var(--text-dim);
+    font-size:12px;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:rgba(0,0,0,.25);
+  }
   .card-overlay{
     position:absolute;
     left:0;right:0;bottom:0;
@@ -324,6 +333,14 @@
     border-radius:999px;
   }
 
+  /* 태블릿 이상: 본문을 넓히고 카드를 키운다 */
+  @media (min-width:768px){
+    main{max-width:1100px;}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+    .card-title{font-size:15.5px;}
+    .badge{font-size:12px;}
+  }
+
   footer{
     text-align:center;
     font-size:11px;
@@ -351,6 +368,8 @@
 <main>
   <!-- 도구줄 -->
   <div class="toolbar">
+    <button id="tv-link-btn">TV 화면</button>
+    <button id="tv-export-btn">TV용 목록 저장</button>
     <button id="export-btn">내보내기</button>
     <button id="import-btn">가져오기</button>
     <input type="file" id="import-file" accept="application/json" style="display:none;">
@@ -743,6 +762,18 @@ function exportData(){
   URL.revokeObjectURL(url);
 }
 
+// TV 화면(tv.html)은 저장소의 videos.json 을 읽는다. 이 파일을 받아 저장소의 videos.json 을 교체하면 TV에 반영된다
+function exportTvList(){
+  const youtubeOnly = loadVideos().filter(v => v.type === 'youtube');
+  const blob = new Blob([JSON.stringify({ videos: youtubeOnly }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'videos.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function importData(file){
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -772,6 +803,8 @@ document.getElementById('filter-part').addEventListener('change', renderList);
 document.getElementById('filter-time').addEventListener('change', renderList);
 document.getElementById('filter-level').addEventListener('change', renderList);
 document.getElementById('export-btn').addEventListener('click', exportData);
+document.getElementById('tv-export-btn').addEventListener('click', exportTvList);
+document.getElementById('tv-link-btn').addEventListener('click', () => { location.href = 'tv.html'; });
 document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
 document.getElementById('import-file').addEventListener('change', (e) => {
   const file = e.target.files[0];
