@@ -404,12 +404,14 @@
     <p class="sync-help">
       토큰을 한 번 저장해 두면, 영상을 등록·삭제하거나 운동을 완료 체크할 때마다 저장소의 <b>videos.json</b>이 자동으로 갱신돼요. TV 화면에 영상 목록이 나타나고, 운동 기록(스트릭)도 이 저장소를 통해 함께 보관돼요.<br>
       1) <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub 토큰 만들기</a> 페이지에서 <b>Repository access</b>는 <b>Only select repositories → hometrainer</b>, <b>Permissions → Contents</b>는 <b>Read and write</b>로 만들어요.<br>
-      2) 만든 토큰(github_pat_로 시작)을 아래에 붙여넣고 저장해요. 토큰은 이 기기 브라우저에만 저장돼요.
+      2) 만든 토큰(github_pat_로 시작)을 아래에 붙여넣고 저장해요. 토큰은 이 기기 브라우저에만 저장돼요.<br>
+      ※ 기기마다 가진 목록이 서로 다르면 자동으로 합쳐지지 않아요. 최신 목록을 가진 기기에서 <b>지금 TV 목록 갱신</b>을 누른 뒤, 다른 기기에서 <b>지금 불러오기</b>를 눌러 맞춰주세요 (불러오면 이 기기의 기존 목록은 덮어써져요).
     </p>
     <input id="token-input" type="password" placeholder="github_pat_..." autocomplete="off">
     <div class="sync-actions">
       <button class="primary" id="token-save">저장</button>
       <button id="sync-now">지금 TV 목록 갱신</button>
+      <button id="pull-now">지금 불러오기</button>
       <button id="token-clear">연동 해제</button>
     </div>
   </div>
@@ -490,7 +492,7 @@
 </main>
 
 <footer>
-  홈트 영상 모음 © 2026 KIMYERANG. (v0.8)<br>
+  홈트 영상 모음 © 2026 KIMYERANG. (v0.9)<br>
   자유롭게 사용 가능하나, 허락 없는 복제·배포·수정은 금지합니다.
 </footer>
 
@@ -902,6 +904,22 @@ async function saveToken(){
   }
 }
 
+async function pullNow(){
+  const token = getToken();
+  if(!token){ setSyncStatus('먼저 토큰을 저장해주세요.'); return; }
+  if(!confirm('공유된 목록으로 이 기기의 영상·운동 기록을 덮어씁니다. 계속할까요?')) return;
+  setSyncStatus('불러오는 중...');
+  try{
+    const remote = await pullFromGithub(token);
+    saveVideos(remote.videos);
+    saveLogs(remote.logs);
+    renderList();
+    setSyncStatus('✓ 공유 목록을 불러왔어요');
+  }catch(e){
+    setSyncStatus('⚠ 불러오기 실패 (' + e.message + ')');
+  }
+}
+
 function clearToken(){
   try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
   updateSyncBtn();
@@ -955,6 +973,7 @@ document.getElementById('sync-btn').addEventListener('click', () => {
   box.style.display = box.style.display === 'none' ? 'block' : 'none';
 });
 document.getElementById('token-save').addEventListener('click', saveToken);
+document.getElementById('pull-now').addEventListener('click', pullNow);
 document.getElementById('token-clear').addEventListener('click', clearToken);
 document.getElementById('sync-now').addEventListener('click', () => {
   if(!getToken()){ setSyncStatus('먼저 토큰을 저장해주세요.'); return; }
