@@ -7,22 +7,22 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-180.png">
-<meta name="theme-color" content="#0a0b0d">
+<meta name="theme-color" content="#f6f7f9">
 <link rel="stylesheet" as="style" crossorigin
   href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <style>
   :root{
-    color-scheme: dark;
-    --bg:#0a0b0d;
-    --surface:#16181c;
-    --surface-2:#1e2125;
-    --line:#2b2e33;
-    --text:#f4f5f6;
-    --text-dim:#9aa0a8;
-    --text-faint:#7d848c;
-    --accent:#fc4c02;
-    --accent-2:#ff7038;
-    --success:#22c55e;
+    color-scheme: light;
+    --bg:#f6f7f9;
+    --surface:#ffffff;
+    --surface-2:#eef0f3;
+    --line:#dde0e5;
+    --text:#16181c;
+    --text-dim:#565d66;
+    --text-faint:#6b727b;
+    --accent:#d63f00;
+    --accent-2:#b83600;
+    --success:#15803d;
     --radius:16px;
     --radius-sm:12px;
   }
@@ -79,7 +79,7 @@
   }
 
   /* 입력 요소 공통 */
-  input[type=url], input[type=text], select{
+  input[type=url], input[type=text], input[type=password], select{
     background:var(--surface-2);
     border:1px solid var(--line);
     color:var(--text);
@@ -87,10 +87,10 @@
     transition:border-color .15s ease, box-shadow .15s ease;
   }
   input::placeholder{color:var(--text-faint);}
-  input[type=url]:focus, input[type=text]:focus, select:focus{
+  input[type=url]:focus, input[type=text]:focus, input[type=password]:focus, select:focus{
     outline:none;
     border-color:var(--accent);
-    box-shadow:0 0 0 3px rgba(252,76,2,.18);
+    box-shadow:0 0 0 3px rgba(214,63,0,.2);
   }
 
   .form-box input[type=url]{
@@ -117,14 +117,15 @@
     border:none;
     border-radius:var(--radius-sm);
     cursor:pointer;
-    box-shadow:0 8px 20px rgba(252,76,2,.28);
+    box-shadow:0 6px 16px rgba(214,63,0,.25);
     transition:transform .12s ease, background-color .15s ease;
   }
   .btn-primary:active{transform:scale(.97);background:var(--accent-2);}
   .status-msg{font-size:13px;color:var(--text-dim);margin-top:8px;min-height:16px;}
 
   /* 상단 도구줄 */
-  .toolbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;}
+  .toolbar{display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  #sync-status{margin-right:auto;font-size:12.5px;color:var(--text-dim);}
   .toolbar button{
     padding:9px 14px;
     font-size:13px;
@@ -138,6 +139,24 @@
   }
   .toolbar button:active{transform:scale(.96);}
 
+  /* TV 연동 설정 */
+  #sync-box h3{margin:0 0 8px;font-size:15px;font-weight:800;}
+  .sync-help{font-size:13px;color:var(--text-dim);line-height:1.65;margin:0 0 12px;word-break:keep-all;}
+  .sync-help a{color:var(--accent-2);}
+  #token-input{width:100%;padding:12px;font-size:15px;margin-bottom:10px;}
+  .sync-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .sync-actions button{
+    padding:10px 14px;
+    font-size:13.5px;
+    font-weight:700;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--text);
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+  }
+  .sync-actions button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+
   /* 필터 & 검색 */
   #search-input{width:100%;padding:11px;font-size:14.5px;margin-bottom:10px;}
   .filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
@@ -148,7 +167,7 @@
     font-size:15px;
     font-weight:800;
     color:var(--accent-2);
-    background:rgba(252,76,2,.12);
+    background:rgba(214,63,0,.08);
     border:1.5px solid var(--accent);
     border-radius:var(--radius-sm);
     cursor:pointer;
@@ -172,8 +191,8 @@
   .ig-msg{
     padding:16px;
     text-align:center;
-    background:rgba(252,76,2,.12);
-    border:1px solid rgba(252,76,2,.35);
+    background:rgba(214,63,0,.08);
+    border:1px solid rgba(214,63,0,.3);
     border-radius:var(--radius-sm);
     font-size:14px;
     color:var(--text);
@@ -209,6 +228,7 @@
 
   /* 목록 */
   .grid{
+    margin-bottom:16px;
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
     gap:12px;
@@ -224,7 +244,7 @@
   }
   .card:active{transform:scale(.97);}
   @media (hover:hover){
-    .card:hover{transform:translateY(-2px);border-color:#3a3e44;}
+    .card:hover{transform:translateY(-2px);border-color:#b8bec6;}
   }
   .thumb{
     position:relative;
@@ -232,21 +252,22 @@
     aspect-ratio:16/9;
     background:var(--surface-2) center/cover no-repeat;
   }
+  /* 썸네일이 없는 카드는 흰색 제목이 잘 읽히도록 어두운 배경을 쓴다 */
   .thumb.no-image{
-    background:linear-gradient(135deg,var(--surface-2),var(--surface));
+    background:linear-gradient(135deg,#4b5563,#1f2937);
   }
   /* 제목은 아래 오버레이에 있으므로, 안내 글자는 좌상단 작은 라벨로 두어 겹치지 않게 한다 */
   .thumb.no-image .placeholder-label{
     position:absolute;
     top:10px;
     left:10px;
-    color:var(--text-dim);
+    color:rgba(255,255,255,.9);
     font-size:12px;
     font-weight:700;
     padding:3px 9px;
     border-radius:999px;
-    border:1px solid var(--line);
-    background:rgba(0,0,0,.25);
+    border:1px solid rgba(255,255,255,.25);
+    background:rgba(0,0,0,.3);
   }
   .card-overlay{
     position:absolute;
@@ -368,11 +389,29 @@
 <main>
   <!-- 도구줄 -->
   <div class="toolbar">
+    <span id="sync-status"></span>
+    <button id="sync-btn">TV 연동</button>
     <button id="tv-link-btn">TV 화면</button>
     <button id="tv-export-btn">TV용 목록 저장</button>
     <button id="export-btn">내보내기</button>
     <button id="import-btn">가져오기</button>
     <input type="file" id="import-file" accept="application/json" style="display:none;">
+  </div>
+
+  <!-- TV 연동 설정 -->
+  <div class="form-box" id="sync-box" style="display:none;">
+    <h3>TV 자동 연동</h3>
+    <p class="sync-help">
+      토큰을 한 번 저장해 두면, 영상을 등록·삭제할 때마다 저장소의 <b>videos.json</b>이 자동으로 갱신되어 TV에 나타나요.<br>
+      1) <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub 토큰 만들기</a> 페이지에서 <b>Repository access</b>는 <b>Only select repositories → hometrainer</b>, <b>Permissions → Contents</b>는 <b>Read and write</b>로 만들어요.<br>
+      2) 만든 토큰(github_pat_로 시작)을 아래에 붙여넣고 저장해요. 토큰은 이 기기 브라우저에만 저장돼요.
+    </p>
+    <input id="token-input" type="password" placeholder="github_pat_..." autocomplete="off">
+    <div class="sync-actions">
+      <button class="primary" id="token-save">저장</button>
+      <button id="sync-now">지금 TV 목록 갱신</button>
+      <button id="token-clear">연동 해제</button>
+    </div>
   </div>
 
   <!-- 영상 등록 -->
@@ -461,6 +500,13 @@ const STORAGE_KEY = 'hometrainer_videos';
 const LOGS_KEY = 'hometrainer_logs'; // [{date:'YYYY-MM-DD', videoId}]
 let currentPlayingId = null;
 
+// TV 연동: 영상 목록 변경 시 저장소의 videos.json 을 GitHub API 로 갱신 (TV 화면이 이 파일을 읽는다)
+const GH_REPO = 'yerang-k/hometrainer';
+const GH_BRANCH = 'main';
+const GH_PATH = 'videos.json';
+const TOKEN_KEY = 'hometrainer_gh_token';
+let syncTimer = null;
+
 function loadVideos(){
   try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
   catch(e){ return []; }
@@ -534,6 +580,7 @@ async function handleAdd(){
     list.unshift(video);
     saveVideos(list);
     renderList();
+    scheduleSync();
     input.value = '';
     statusEl.textContent = '등록됐어요.';
   }else if(isInstagramUrl(url)){
@@ -614,6 +661,7 @@ function deleteVideo(id){
   const list = loadVideos().filter(v => v.id !== id);
   saveVideos(list);
   renderList();
+  scheduleSync();
 }
 
 function getFilteredVideos(){
@@ -763,6 +811,98 @@ function exportData(){
 }
 
 // TV 화면(tv.html)은 저장소의 videos.json 을 읽는다. 이 파일을 받아 저장소의 videos.json 을 교체하면 TV에 반영된다
+function getToken(){
+  try{ return localStorage.getItem(TOKEN_KEY) || ''; }catch(e){ return ''; }
+}
+function setSyncStatus(text){
+  document.getElementById('sync-status').textContent = text;
+}
+function updateSyncBtn(){
+  document.getElementById('sync-btn').textContent = getToken() ? 'TV 연동 ✓' : 'TV 연동';
+}
+function ghUrl(){
+  return 'https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_PATH;
+}
+function ghHeaders(token){
+  return { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+}
+
+// 변경이 연달아 일어나도 한 번에 묶어 올린다
+function scheduleSync(){
+  if(!getToken()) return;
+  clearTimeout(syncTimer);
+  setSyncStatus('TV 목록 갱신 대기 중...');
+  syncTimer = setTimeout(pushToGithub, 1500);
+}
+
+async function pushToGithub(){
+  const token = getToken();
+  if(!token) return;
+  const headers = ghHeaders(token);
+  const body = JSON.stringify({ videos: loadVideos().filter(v => v.type === 'youtube') }, null, 2) + '\n';
+  const content = btoa(unescape(encodeURIComponent(body)));
+  setSyncStatus('TV 목록 갱신 중...');
+  try{
+    // 다른 곳에서 먼저 바뀌었으면(409/422) 최신 sha 로 한 번 더 시도
+    for(let attempt = 0; attempt < 2; attempt++){
+      let sha;
+      const g = await fetch(ghUrl() + '?ref=' + GH_BRANCH + '&t=' + Date.now(), { headers, cache: 'no-store' });
+      if(g.ok){ sha = (await g.json()).sha; }
+      else if(g.status !== 404){ throw new Error(String(g.status)); }
+      const put = await fetch(ghUrl(), {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ message: '영상 목록 업데이트', content, branch: GH_BRANCH, sha })
+      });
+      if(put.ok){ setSyncStatus('✓ TV 목록 갱신 완료 (TV에서 새로고침)'); return; }
+      if(put.status !== 409 && put.status !== 422) throw new Error(String(put.status));
+    }
+    throw new Error('충돌');
+  }catch(e){
+    const code = e.message;
+    setSyncStatus(code === '401' || code === '403' || code === '404'
+      ? '⚠ TV 연동 실패: 토큰을 확인해주세요 (' + code + ')'
+      : '⚠ TV 연동 실패 (' + code + ')');
+  }
+}
+
+// TV 목록(저장소 videos.json)을 읽어 온다
+async function pullFromGithub(token){
+  const res = await fetch(ghUrl() + '?ref=' + GH_BRANCH + '&t=' + Date.now(), {
+    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github.raw+json' },
+    cache: 'no-store'
+  });
+  if(!res.ok) throw new Error(String(res.status));
+  const data = JSON.parse(await res.text());
+  return Array.isArray(data.videos) ? data.videos : [];
+}
+
+async function saveToken(){
+  const token = document.getElementById('token-input').value.trim();
+  if(!token){ setSyncStatus('토큰을 입력해주세요.'); return; }
+  try{
+    // 토큰이 맞는지 확인하면서, 이 기기가 비어 있으면 TV 목록을 가져올지 묻는다
+    const remote = await pullFromGithub(token);
+    localStorage.setItem(TOKEN_KEY, token);
+    document.getElementById('token-input').value = '';
+    updateSyncBtn();
+    if(loadVideos().length === 0 && remote.length > 0 && confirm('TV 목록에 영상이 ' + remote.length + '개 있어요. 이 기기로 가져올까요?')){
+      saveVideos(remote);
+      renderList();
+    }
+    setSyncStatus('✓ TV 연동이 켜졌어요');
+    document.getElementById('sync-box').style.display = 'none';
+  }catch(e){
+    setSyncStatus('⚠ 토큰을 확인해주세요 (' + e.message + ')');
+  }
+}
+
+function clearToken(){
+  try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
+  updateSyncBtn();
+  setSyncStatus('TV 연동을 해제했어요');
+}
+
 function exportTvList(){
   const youtubeOnly = loadVideos().filter(v => v.type === 'youtube');
   const blob = new Blob([JSON.stringify({ videos: youtubeOnly }, null, 2)], { type: 'application/json' });
@@ -789,6 +929,7 @@ function importData(file){
     saveVideos(data.videos);
     saveLogs(Array.isArray(data.logs) ? data.logs : []);
     renderList();
+    scheduleSync();
     alert('가져오기 완료');
   };
   reader.readAsText(file);
@@ -804,6 +945,17 @@ document.getElementById('filter-time').addEventListener('change', renderList);
 document.getElementById('filter-level').addEventListener('change', renderList);
 document.getElementById('export-btn').addEventListener('click', exportData);
 document.getElementById('tv-export-btn').addEventListener('click', exportTvList);
+document.getElementById('sync-btn').addEventListener('click', () => {
+  const box = document.getElementById('sync-box');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+});
+document.getElementById('token-save').addEventListener('click', saveToken);
+document.getElementById('token-clear').addEventListener('click', clearToken);
+document.getElementById('sync-now').addEventListener('click', () => {
+  if(!getToken()){ setSyncStatus('먼저 토큰을 저장해주세요.'); return; }
+  pushToGithub();
+});
+updateSyncBtn();
 document.getElementById('tv-link-btn').addEventListener('click', () => { location.href = 'tv.html'; });
 document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
 document.getElementById('import-file').addEventListener('change', (e) => {
