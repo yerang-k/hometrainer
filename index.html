@@ -233,12 +233,21 @@
     background:var(--surface-2) center/cover no-repeat;
   }
   .thumb.no-image{
-    display:flex;
-    align-items:center;
-    justify-content:center;
     background:linear-gradient(135deg,var(--surface-2),var(--surface));
   }
-  .thumb.no-image .placeholder-label{color:var(--text-dim);font-size:13px;font-weight:600;}
+  /* 제목은 아래 오버레이에 있으므로, 안내 글자는 좌상단 작은 라벨로 두어 겹치지 않게 한다 */
+  .thumb.no-image .placeholder-label{
+    position:absolute;
+    top:10px;
+    left:10px;
+    color:var(--text-dim);
+    font-size:12px;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:rgba(0,0,0,.25);
+  }
   .card-overlay{
     position:absolute;
     left:0;right:0;bottom:0;
@@ -322,6 +331,14 @@
     font-size:12px;
     padding:3px 9px;
     border-radius:999px;
+  }
+
+  /* 태블릿 이상: 본문을 넓히고 카드를 키운다 */
+  @media (min-width:768px){
+    main{max-width:1100px;}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+    .card-title{font-size:15.5px;}
+    .badge{font-size:12px;}
   }
 
   footer{
