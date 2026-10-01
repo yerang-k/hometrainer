@@ -402,7 +402,7 @@
   <div class="form-box" id="sync-box" style="display:none;">
     <h3>TV 자동 연동</h3>
     <p class="sync-help">
-      토큰을 한 번 저장해 두면, 영상을 등록·삭제할 때마다 저장소의 <b>videos.json</b>이 자동으로 갱신되어 TV에 나타나요.<br>
+      토큰을 한 번 저장해 두면, 영상을 등록·삭제하거나 운동을 완료 체크할 때마다 저장소의 <b>videos.json</b>이 자동으로 갱신돼요. TV 화면에 영상 목록이 나타나고, 운동 기록(스트릭)도 이 저장소를 통해 함께 보관돼요.<br>
       1) <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub 토큰 만들기</a> 페이지에서 <b>Repository access</b>는 <b>Only select repositories → hometrainer</b>, <b>Permissions → Contents</b>는 <b>Read and write</b>로 만들어요.<br>
       2) 만든 토큰(github_pat_로 시작)을 아래에 붙여넣고 저장해요. 토큰은 이 기기 브라우저에만 저장돼요.
     </p>
@@ -490,7 +490,7 @@
 </main>
 
 <footer>
-  홈트 영상 모음 © 2026 KIMYERANG. (v0.6)<br>
+  홈트 영상 모음 © 2026 KIMYERANG. (v0.8)<br>
   자유롭게 사용 가능하나, 허락 없는 복제·배포·수정은 금지합니다.
 </footer>
 
@@ -648,6 +648,7 @@ function completeToday(){
   saveLogs(logs);
   updateCompleteBtn();
   renderStats();
+  scheduleSync();
 }
 
 function recommendVideo(){
@@ -839,7 +840,7 @@ async function pushToGithub(){
   const token = getToken();
   if(!token) return;
   const headers = ghHeaders(token);
-  const body = JSON.stringify({ videos: loadVideos().filter(v => v.type === 'youtube') }, null, 2) + '\n';
+  const body = JSON.stringify({ videos: loadVideos().filter(v => v.type === 'youtube'), logs: loadLogs() }, null, 2) + '\n';
   const content = btoa(unescape(encodeURIComponent(body)));
   setSyncStatus('TV 목록 갱신 중...');
   try{
@@ -852,7 +853,7 @@ async function pushToGithub(){
       const put = await fetch(ghUrl(), {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ message: '영상 목록 업데이트', content, branch: GH_BRANCH, sha })
+        body: JSON.stringify({ message: '홈트 데이터 업데이트', content, branch: GH_BRANCH, sha })
       });
       if(put.ok){ setSyncStatus('✓ TV 목록 갱신 완료 (TV에서 새로고침)'); return; }
       if(put.status !== 409 && put.status !== 422) throw new Error(String(put.status));
@@ -866,7 +867,7 @@ async function pushToGithub(){
   }
 }
 
-// TV 목록(저장소 videos.json)을 읽어 온다
+// 저장소 videos.json을 읽어 온다 (영상 목록 + 운동 기록)
 async function pullFromGithub(token){
   const res = await fetch(ghUrl() + '?ref=' + GH_BRANCH + '&t=' + Date.now(), {
     headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github.raw+json' },
@@ -874,20 +875,24 @@ async function pullFromGithub(token){
   });
   if(!res.ok) throw new Error(String(res.status));
   const data = JSON.parse(await res.text());
-  return Array.isArray(data.videos) ? data.videos : [];
+  return {
+    videos: Array.isArray(data.videos) ? data.videos : [],
+    logs: Array.isArray(data.logs) ? data.logs : []
+  };
 }
 
 async function saveToken(){
   const token = document.getElementById('token-input').value.trim();
   if(!token){ setSyncStatus('토큰을 입력해주세요.'); return; }
   try{
-    // 토큰이 맞는지 확인하면서, 이 기기가 비어 있으면 TV 목록을 가져올지 묻는다
+    // 토큰이 맞는지 확인하면서, 이 기기가 비어 있으면 TV 목록(+운동 기록)을 가져올지 묻는다
     const remote = await pullFromGithub(token);
     localStorage.setItem(TOKEN_KEY, token);
     document.getElementById('token-input').value = '';
     updateSyncBtn();
-    if(loadVideos().length === 0 && remote.length > 0 && confirm('TV 목록에 영상이 ' + remote.length + '개 있어요. 이 기기로 가져올까요?')){
-      saveVideos(remote);
+    if(loadVideos().length === 0 && remote.videos.length > 0 && confirm('TV 목록에 영상이 ' + remote.videos.length + '개 있어요. 운동 기록과 함께 이 기기로 가져올까요?')){
+      saveVideos(remote.videos);
+      saveLogs(remote.logs);
       renderList();
     }
     setSyncStatus('✓ TV 연동이 켜졌어요');
